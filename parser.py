@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
+from excel import ExcelWriter
 
 
 def parse_one(userId):
@@ -32,7 +33,7 @@ def writable(parsed):
 def writable_markdown_line(parsed):
 	result = '| '
 	for x in parsed:
-		result += str(x) + ' | '
+		result += str(x if type(x) != list else len(x)) + ' | '
 	return result[:-1]
 
 
@@ -79,8 +80,9 @@ def parse_all():
 		parsed = parse_one(now)
 		with open('results/' + parsed[1] + '.txt', 'w', encoding='utf-8') as f:
 			f.write(writable(parsed))
-		result.append([parsed[1], len(parsed[2]), len(parsed[3]), parsed[4], parsed[5]])
+		result.append([parsed[1], parsed[2], parsed[3], parsed[4], parsed[5]])
 	result = sorted(result, key=sort_result)
+	ExcelWriter().write('results.xlsx', result)
 	with open('results.txt', 'w', encoding='utf-8') as f:
 		f.write('Время обновления: ' + parsing_time + '\n')
 		f.write('Участник                 +\t-\tМесто\tРейтинг\n')
@@ -88,7 +90,7 @@ def parse_all():
 			name = now[0]
 			while(len(name) < 25):
 				name += ' '
-			f.write(name + str(now[1]) + '\t' + str(now[2]) + '\t' + str(now[3]) + '\t' + str(now[4]) + '\n')
+			f.write(name + str(len(now[1])) + '\t' + str(len(now[2])) + '\t' + str(now[3]) + '\t' + str(now[4]) + '\n')
 	with open('README.md', 'w', encoding='utf-8') as f:
 		f.write(writable_markdown_text(parsing_time, result))
 
