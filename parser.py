@@ -115,6 +115,7 @@ def parse_user_profile(userId):
 	userName = html_parser.find_all('td', {'class' : 'menu_title'})[4].text
 	userName = bytes(userName, r.encoding).decode('cp1251').title()
 	userName = ' '.join(userName.split(' ')[0:2])
+	print(userName)
 	return User(userId, userName, rank, rating)
 
 
@@ -122,6 +123,7 @@ def parse_user_submissions(userId):
 	bad_task, good_task = [], []
 	page = 0
 	while True:
+		print('Page', page)
 		url = 'https://acmp.ru/index.asp?main=status&id_mem={0}&id_res=0&id_t=0&page={1}&uid=0'.format(userId, page)
 		r = requests.get(url + str(userId))
 		html_parser = BeautifulSoup(r.text, 'html.parser')
