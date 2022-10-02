@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
 from excel import ExcelWriter
+import os, shutil
 
 
 class User:
@@ -25,22 +26,45 @@ class User:
 class Task:
 	def __init__(self, id, good, bad):
 		self.id, self.good, self.bad = id, good, bad
+		self.good_langs, self.bad_langs = {}, {}
 
 	def status(self):
 		return self.good > 0
+
+	def solve(self, lang):
+		self.good += 1
+		if lang not in self.good_langs:
+			self.good_langs[lang] = 0
+		self.good_langs[lang] += 1
+
+	def solved(self, lang=None):
+		if lang is None:
+			return self.good
+		return self.good_langs[lang] if lang in self.good_langs else 0
+
+	def unsolve(self, lang):
+		self.bad += 1
+		if lang not in self.bad_langs:
+			self.bad_langs[lang] = 0
+		self.bad_langs[lang] += 1
+
+	def unsolved(self, lang=None):
+		if lang is None:
+			return self.bad
+		return self.bad_langs[lang] if lang in self.bad_langs else 0
 
 	@staticmethod
 	def sortf(task):
 		return task.id
 
-	def pm(self):
-		result = ''
-		if self.good > 0:
-			result += '{}+'.format(self.good)
-			if self.bad > 0:
+	def pm(self, lang=None):
+		result, good, bad = '', self.solved(lang), self.unsolved(lang)
+		if good > 0:
+			result += '{}+'.format(good)
+			if bad > 0:
 				result += ', '
-		if self.bad > 0:
-			result += '{}-'.format(self.bad)
+		if bad > 0:
+			result += '{}-'.format(bad)
 		return result
 
 	def __repr__(self):
@@ -48,13 +72,14 @@ class Task:
 
 
 class Tasks:
-	def __init__(self, bad, good):
+	def __init__(self, bad_with_lang, good_with_lang):
+		bad, good = [_[0] for _ in bad_with_lang], [_[0] for _ in good_with_lang]
 		self.map_tasks = {_: Task(_, 0, 0) for _ in set(bad).union(good)}
 		self.max_task = 0
-		for task in good:
-			self.map_tasks[task].good += 1
-		for task in bad:
-			self.map_tasks[task].bad += 1
+		for task in good_with_lang:
+			self.map_tasks[task[0]].solve(task[1])
+		for task in bad_with_lang:
+			self.map_tasks[task[0]].unsolve(task[1])
 		self.good, self.bad, self.goods, self.bads = 0, 0, 0, 0
 		self.tasks = self.map_tasks.values()
 		for task in self.tasks:
@@ -132,9 +157,9 @@ def parse_user_submissions(userId):
 			id, tim, user, task, lang, res, test, etime, emem = (_.text for _ in row.findAll('td'))
 			task = int(task)
 			if res == 'Accepted':
-				good_task.append(task)
+				good_task.append([task, lang])
 			else:
-				bad_task.append(task)
+				bad_task.append([task, lang])
 		if len(rows) < 20:
 			break
 		page += 1
@@ -145,7 +170,6 @@ def get_time():
 	return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-
 def writable_md(time, data):
 	result = '''# Результаты acmp
 Здесь можно увидеть результаты решения задач на сайте [acmp](https://acmp.ru). 
@@ -153,7 +177,8 @@ def writable_md(time, data):
 ## Результаты
 Все решенные задачи можно увидеть в `results.xlsx`.  
 Результаты всей группы можно увидеть ниже и в `results.txt`.  
-Свои результаты можно посмотреть в папке `results`.
+Свои результаты можно посмотреть в папке `users_results`.  
+Домашняя работа написана в папке `tasks`, а её выполнение в папке `tasks_results`.
 
 ## Таблица
 Время обновления: {}
@@ -162,6 +187,17 @@ def writable_md(time, data):
 '''.format(time)
 	for x in data:
 		result += x[0].writable_md() + x[1].writable_md()
+	return result
+
+
+def writable_md_task(time, data, task):
+	result = '''# Задачи {}
+Время обновления: {}
+| ID   | Участник | +    | -    |
+| ---- | -------- | ---- | ---- |
+'''.format(task, time)
+	for i in range(1, len(data[0])):
+		result += '| {} | {} | {} | {} |\n'.format(data[1][i], data[0][i], data[2][i], data[3][i])
 	return result
 
 
@@ -174,24 +210,53 @@ ID	Участник                 Место	Рейтинг	Посылки	+ (
 	return result
 
 
-def parse_all():
-	with open('users.txt', 'r') as f:
-		files = [int(x) for x in f.read().split('\n')]
-	result = []
-	parsing_time = get_time()
-	for now in files:
+def parse_group(folder, url_suffix, users, lang):
+	res_folder, tasks_folder = folder + 'users_results/', folder + 'tasks_results/'
+	if os.path.exists(res_folder):
+		shutil.rmtree(res_folder)
+	if os.path.exists(tasks_folder):
+		shutil.rmtree(tasks_folder)
+	os.makedirs(res_folder)
+	os.makedirs(tasks_folder)
+	result, parsing_time = [], get_time()
+	for now in users:
 		user = parse_user_profile(now)
 		tasks, user.send = parse_user_submissions(now)
-		with open('results/' + user.name + '.txt', 'w', encoding='utf-8') as f:
+		with open(res_folder + user.name + '.txt', 'w', encoding='utf-8') as f:
 			f.write(user.writable())
 			f.write(tasks.writable())
 		result.append([user, tasks])
 	result = sorted(result, key=lambda x: x[0].rank)
-	ExcelWriter().write('results.xlsx', result)
-	with open('README.md', 'w', encoding='utf-8') as f:
+	ExcelWriter().write(folder + 'results.xlsx', result)
+	with open(folder + 'results.md', 'w', encoding='utf-8') as f:
 		f.write(writable_md(parsing_time, result))
-	with open('results.txt', 'w', encoding='utf-8') as f:
+	with open(folder + 'results.txt', 'w', encoding='utf-8') as f:
 		f.write(writable_txt(parsing_time, result))
+	for tasks_file in os.listdir(folder + 'tasks'):
+		with open(folder + 'tasks/' + tasks_file) as f:
+			tasks = sorted(map(int, f.read().split('\n')))
+		task_full_name = tasks_folder + tasks_file.rsplit('.', 1)[0]
+		data = ExcelWriter().write(task_full_name + '.xlsx', result, tasks, lang)
+		with open(task_full_name + '.md', 'w', encoding='utf-8') as f:
+			f.write(writable_md_task(parsing_time, data, tasks_file.rsplit('.', 1)[0]))
+
+
+def parse_all():
+	path = 'groups'
+	for group in os.listdir(path):
+		p, url_suffix, users, lang = path + '/' + group + '/', '', [], None
+		with open(p + 'users.txt', 'r') as f:
+			lines = f.read().split('\n')
+		for line in lines:
+			if line == '':
+				continue
+			elif line[0] == '&':
+				url_suffix += line
+			elif '0' <= line[0] <= '9':
+				users.append(int(line))
+			elif line.startswith('lang_task'):
+				lang = line[10:]
+		parse_group(p, url_suffix, users, lang)
 
 
 if __name__ == '__main__':

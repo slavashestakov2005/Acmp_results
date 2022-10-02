@@ -2,6 +2,8 @@ import xlsxwriter
 
 
 class ExcelParentWriter:
+    def __init__(self):
+        self.head_size = 8
     def __add_row__(self, worksheet, idx, *args, color=True):
         i = 0
         for arg in args:
@@ -23,7 +25,7 @@ class ExcelParentWriter:
         if not cols_cnt and len(data):
             cols_cnt = len(data[0]) - 1
         for row in data:
-            self.__add_row__(worksheet, row_idx, *row, color=(row_idx >= 9))
+            self.__add_row__(worksheet, row_idx, *row, color=(row_idx >= self.head_size + 1))
             row_idx += 1
         worksheet.autofilter(start, 0, row_idx-1, cols_cnt)
 
@@ -66,33 +68,47 @@ class ExcelParentWriter:
 
 
 class ExcelWriter(ExcelParentWriter):
-    def __gen_sheet__(self, worksheet, data: list):
-        tasks_count = max(_[1].max_task for _ in data) + 1
+    def __gen_sheet__(self, worksheet, data: list, tasks_list=None, lang=None):
         head, wr = ['№'], [['ID'], ['Место'], ['Рейтинг'], ['Посылки'], ['+ (1000)'], ['- (1000)'], ['+'], ['-']]
-        wr.extend([i] for i in range(1, tasks_count))
+        if tasks_list is None:
+            tasks_list = range(1, max(_[1].max_task for _ in data) + 1)
+        else:
+            wr, self.head_size = [['ID'], ['+'], ['-']], 3
+        tasks_count = max(_[1].max_task for _ in data) + 1
+        wr.extend([i] for i in tasks_list)
         for x in data:
             user, tasks = x
+            good, bad = 0, 0
             head.append(user.name)
             wr[0].append(user.id)
-            wr[1].append(user.rank)
-            wr[2].append(user.rating)
-            wr[3].append(user.send)
-            wr[4].append(tasks.goods)
-            wr[5].append(tasks.bads)
-            wr[6].append(tasks.goods + tasks.good)
-            wr[7].append(tasks.bads + tasks.bad)
-            for i in range(1, tasks_count):
-                task = tasks.get_task(i)
+            if self.head_size == 8:
+                wr[1].append(user.rank)
+                wr[2].append(user.rating)
+                wr[3].append(user.send)
+                wr[4].append(tasks.goods)
+                wr[5].append(tasks.bads)
+                wr[6].append(tasks.goods + tasks.good)
+                wr[7].append(tasks.bads + tasks.bad)
+            for i in range(len(tasks_list)):
+                task = tasks.get_task(tasks_list[i])
                 v = 0
-                if task.good > 0:
+                if task.solved(lang) > 0:
                     v = 1
-                elif task.bad > 0:
+                    good += 1
+                elif task.unsolved(lang) > 0:
                     v = -1
-                wr[i + 7].append([v, task.pm()])
+                    bad += 1
+                wr[i + self.head_size].append([v, task.pm(lang)])
+            if self.head_size == 3:
+                wr[1].append(good)
+                wr[2].append(bad)
         self.__head__(worksheet, *head)
         self.__write__(worksheet, wr)
+        if self.head_size == 3:
+            return head, wr[0], wr[1], wr[2]
 
-    def write(self, filename: str, data: list):
+    def write(self, filename: str, data: list, tasks_list=None, lang=None):
         self.__styles__(filename)
-        self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), data)
+        res = self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), data, tasks_list, lang)
         self.workbook.close()
+        return res
