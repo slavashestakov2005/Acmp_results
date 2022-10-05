@@ -32,6 +32,8 @@ class Task:
 		return self.good > 0
 
 	def solve(self, lang):
+		if 'C++' in lang:
+			lang = 'C++'
 		self.good += 1
 		if lang not in self.good_langs:
 			self.good_langs[lang] = 0
@@ -43,6 +45,8 @@ class Task:
 		return self.good_langs[lang] if lang in self.good_langs else 0
 
 	def unsolve(self, lang):
+		if 'C++' in lang:
+			lang = 'C++'
 		self.bad += 1
 		if lang not in self.bad_langs:
 			self.bad_langs[lang] = 0
