@@ -3,6 +3,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from excel import ExcelWriter
 import os, shutil
+import pickle
 
 
 class User:
@@ -104,9 +105,10 @@ class Tasks:
 			return Task(task, 0, 0)
 		return self.map_tasks[task]
 
-	def writable(self):
+	def writable(self, last_solve):
 		result = 'Всего решено {}, из них в первой тысяче {}\n'.format(self.good + self.goods, self.goods)
 		result += 'Всего не решено {}, из них в первой тысяче {}\n'.format(self.bad + self.bads, self.bads)
+		result += 'Последняя попытка: {}\n'.format(last_solve)
 		tasks = {}
 		for task in self.tasks:
 			part = (task.id - 1) // 100
@@ -148,8 +150,22 @@ def parse_user_profile(userId):
 	return User(userId, userName, rank, rating)
 
 
-def parse_user_submissions(userId):
-	bad_task, good_task = [], []
+def load_saved(raw_file):
+	if not os.path.exists(raw_file):
+		return [], [], -1
+	with open(raw_file, 'rb') as f:
+		data = pickle.load(f)
+	return data
+
+
+def dump_saved(raw_file, *args):
+	with open(raw_file, 'wb') as f:
+		pickle.dump(args, f)
+
+
+def parse_user_submissions(userId, raw_file):
+	bad_task, good_task, last_solve = load_saved(raw_file)
+	first_solve = last_solve
 	page = 0
 	while True:
 		print('Page', page)
@@ -159,6 +175,11 @@ def parse_user_submissions(userId):
 		rows = html_parser.find_all('table', {'class' : 'main refresh'})[0].findAll('tr')
 		for row in rows:
 			id, tim, user, task, lang, res, test, etime, emem = (_.text for _ in row.findAll('td'))
+			if first_solve == last_solve:
+				first_solve = id
+			if id == last_solve:
+				rows = []
+				break
 			task = int(task)
 			if res == 'Accepted':
 				good_task.append([task, lang])
@@ -167,7 +188,8 @@ def parse_user_submissions(userId):
 		if len(rows) < 20:
 			break
 		page += 1
-	return (Tasks(bad_task, good_task), len(good_task) + len(bad_task))
+	dump_saved(raw_file, bad_task, good_task, first_solve)
+	return Tasks(bad_task, good_task), len(good_task) + len(bad_task), first_solve
 
 
 def get_time():
@@ -215,7 +237,7 @@ ID	Участник                 Место	Рейтинг	Посылки	+ (
 
 
 def parse_group(folder, url_suffix, users, lang):
-	res_folder, tasks_folder = folder + 'users_results/', folder + 'tasks_results/'
+	raw_folder, res_folder, tasks_folder = folder + 'raw_results/', folder + 'users_results/', folder + 'tasks_results/'
 	if os.path.exists(res_folder):
 		shutil.rmtree(res_folder)
 	if os.path.exists(tasks_folder):
@@ -225,10 +247,10 @@ def parse_group(folder, url_suffix, users, lang):
 	result, parsing_time = [], get_time()
 	for now in users:
 		user = parse_user_profile(now)
-		tasks, user.send = parse_user_submissions(now)
+		tasks, user.send, last_solve = parse_user_submissions(now, raw_folder + user.name + '.txt')
 		with open(res_folder + user.name + '.txt', 'w', encoding='utf-8') as f:
 			f.write(user.writable())
-			f.write(tasks.writable())
+			f.write(tasks.writable(last_solve))
 		result.append([user, tasks])
 	result = sorted(result, key=lambda x: x[0].rank)
 	ExcelWriter().write(folder + 'results.xlsx', result)
