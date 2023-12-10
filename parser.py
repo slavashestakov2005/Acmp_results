@@ -236,12 +236,23 @@ ID	Участник                 Место	Рейтинг	Посылки	+ (
 	return result
 
 
+def read_tasks_list(file):
+	tasks_ids = []
+	for line in file.readlines():
+		task_id = line.split('.')[0]
+		if 'acmp' in line and task_id != '' and task_id.isdigit():
+			tasks_ids.append(int(task_id))
+	return sorted(tasks_ids)
+
+
 def parse_group(folder, url_suffix, users, lang):
 	raw_folder, res_folder, tasks_folder = folder + 'raw_results/', folder + 'users_results/', folder + 'tasks_results/'
 	if os.path.exists(res_folder):
 		shutil.rmtree(res_folder)
 	if os.path.exists(tasks_folder):
 		shutil.rmtree(tasks_folder)
+	if not os.path.exists(raw_folder):
+		os.makedirs(raw_folder)
 	os.makedirs(res_folder)
 	os.makedirs(tasks_folder)
 	result, parsing_time = [], get_time()
@@ -258,13 +269,14 @@ def parse_group(folder, url_suffix, users, lang):
 		f.write(writable_md(parsing_time, result))
 	with open(folder + 'results.txt', 'w', encoding='utf-8') as f:
 		f.write(writable_txt(parsing_time, result))
-	for tasks_file in os.listdir(folder + 'tasks'):
-		with open(folder + 'tasks/' + tasks_file) as f:
-			tasks = sorted(map(int, f.read().split('\n')))
-		task_full_name = tasks_folder + tasks_file.rsplit('.', 1)[0]
-		data = ExcelWriter().write(task_full_name + '.xlsx', result, tasks, lang)
-		with open(task_full_name + '.md', 'w', encoding='utf-8') as f:
-			f.write(writable_md_task(parsing_time, data, tasks_file.rsplit('.', 1)[0]))
+	if os.path.exists(folder + 'tasks'):
+		for tasks_file in os.listdir(folder + 'tasks'):
+			with open(folder + 'tasks/' + tasks_file, 'r', encoding='utf-8') as f:
+				tasks = read_tasks_list(f)
+			task_full_name = tasks_folder + tasks_file.rsplit('.', 1)[0]
+			data = ExcelWriter().write(task_full_name + '.xlsx', result, tasks, lang)
+			with open(task_full_name + '.md', 'w', encoding='utf-8') as f:
+				f.write(writable_md_task(parsing_time, data, tasks_file.rsplit('.', 1)[0]))
 
 
 def parse_all():
