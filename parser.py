@@ -239,10 +239,12 @@ ID	Участник                 Место	Рейтинг	Посылки	+ (
 def read_tasks_list(file):
 	tasks_ids = []
 	for line in file.readlines():
-		task_id = line.split('.')[0]
-		if 'acmp' in line and task_id != '' and task_id.isdigit():
+		task_id = line.strip().split('.')[0] if 'acmp' in line else line.strip()
+		if task_id.isdigit():
 			tasks_ids.append(int(task_id))
-	return sorted(tasks_ids)
+	v = sorted(tasks_ids)
+	print(v)
+	return v
 
 
 def parse_group(folder, url_suffix, users, lang):
