@@ -242,9 +242,7 @@ def read_tasks_list(file):
 		task_id = line.strip().split('.')[0] if 'acmp' in line else line.strip()
 		if task_id.isdigit():
 			tasks_ids.append(int(task_id))
-	v = sorted(tasks_ids)
-	print(v)
-	return v
+	return sorted(tasks_ids)
 
 
 def parse_group(folder, url_suffix, users, lang):
