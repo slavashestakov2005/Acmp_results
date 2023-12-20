@@ -246,7 +246,7 @@ def read_tasks_list(file):
 
 
 def parse_group(folder, url_suffix, users, lang):
-	raw_folder, res_folder, tasks_folder = folder + 'raw_results/', folder + 'users_results/', folder + 'tasks_results/'
+	raw_folder, res_folder, tasks_folder = 'raw_results/', folder + 'users_results/', folder + 'tasks_results/'
 	if os.path.exists(res_folder):
 		shutil.rmtree(res_folder)
 	if os.path.exists(tasks_folder):
@@ -258,7 +258,7 @@ def parse_group(folder, url_suffix, users, lang):
 	result, parsing_time = [], get_time()
 	for now in users:
 		user = parse_user_profile(now)
-		tasks, user.send, last_solve = parse_user_submissions(now, raw_folder + user.name + '.txt')
+		tasks, user.send, last_solve = parse_user_submissions(now, raw_folder + str(user.id) + '.txt')
 		with open(res_folder + user.name + '.txt', 'w', encoding='utf-8') as f:
 			f.write(user.writable())
 			f.write(tasks.writable(last_solve))
