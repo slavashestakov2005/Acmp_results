@@ -1,0 +1,10 @@
+{
+    "users": [
+        {"name": "Поддубецкий Антон", "acmp": 369588, "codeforces": "a_ntony"},
+        {"name": "Ченченко Даниил", "acmp": 430719, "codeforces": "pchelka12"},
+        {"name": "Шатохин Данил", "acmp": 415486, "codeforces": "Dinelo"},
+        {"name": "Леонтьев Дмитрий", "acmp": 328905, "codeforces": "sen1van"}
+    ],
+    "langs": [],
+    "url_suffix": ""
+}

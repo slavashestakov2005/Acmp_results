@@ -1,0 +1,27 @@
+{
+    "users": [
+        {"name": "Шестаков Вячеслав", "acmp": 263178, "codeforces": "slavashestakov2005"},
+        {"name": "Ченченко Даниил", "acmp": 430719, "codeforces": "pchelka12"},
+        {"name": "Екатерина Юрьевна", "acmp": 262625},
+        {"name": "Поддубецкий Антон", "acmp": 369588, "codeforces": "a_ntony"},
+        {"name": "Шатохин Данил", "acmp": 415486, "codeforces": "Dinelo"},
+        {"name": "Селедкин Ярослав", "acmp": 415633, "codeforces|": "y.seledkin"},
+        {"name": "Леонтьев Дмитрий", "acmp": 328905, "codeforces": "sen1van"},
+        {"name": "Коляда Вадим", "acmp": 321426, "codeforces": "Vadlm"},
+        {"name": "Медведев Александр", "acmp": 369107, "codeforces": "Sasha_Medvedev"},
+        {"name": "Трегубович Андрей", "acmp": 321411, "codeforces": "AndreBc"},
+        {"name": "Дегтерева Карина", "acmp": 416762, "codeforces": "degterevvva"},
+        {"name": "Казаков Максим", "acmp": 321540},
+        {"name": "Карпович Александр", "acmp": 321423, "codeforces": "044s4"},
+        {"name": "Провалинский Владимир", "acmp": 371742},
+        {"name": "Пяткова Валерия", "acmp": 417223},
+        {"name": "Виктор Морозов", "acmp": 417133, "codeforces": "ABRAMOVICHH"},
+        {"name": "Глушков Артём", "acmp": 418688, "codeforces": "art3m_glushkov"},
+        {"name": "Грачёв Ромен", "codeforces": "Romafka"},
+        {"name": "Костюнин Егор", "codeforces": "kjuby"},
+        {"name": "Урцегов Артём", "codeforces": "AbramovichLinkoln"}
+    ],
+    "langs": [],
+    "url_suffix": "",
+    "comments": "Раньше был установлен язык C++"
+}
