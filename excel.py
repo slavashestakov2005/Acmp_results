@@ -111,7 +111,7 @@ class AcmpExcelWriter(ExcelParentWriter):
         for x in data:
             user, tasks = x
             good, bad = 0, 0
-            head.append(user.name)
+            head.append(('d', user.name))
             wr[0].append(('au', user.id))
             if self.head_size == 8:
                 wr[1].append(('d', user.rank))
@@ -149,7 +149,7 @@ class AcmpExcelWriter(ExcelParentWriter):
 class CodeforcesExcelWriter(ExcelParentWriter):
     def __gen_sheet__(self, worksheet, data: list):
         lang = None
-        head, wr = [('d', '№')], [[('d', 'ID')], [('d', 'Рейтинг')], [('d', 'Посылки')], [('d', '+')], [('d', '-')]]
+        head, wr = [('d', '№')], [[('d', 'Хендл')], [('d', 'Рейтинг')], [('d', 'Посылки')], [('d', '+')], [('d', '-')]]
         self.head_size = 5
         tasks_list = set()
         for user in data:

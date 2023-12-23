@@ -69,7 +69,7 @@ def parse_group(folder, url_suffix, users, langs):
 	with open(folder + 'acmp_results.md', 'w', encoding='utf-8') as f:
 		f.write(acmp.writable_md(parsing_time, acmp_results))
 
-	cf_results = sorted(cf_results, key=lambda x: x[0].rating)
+	cf_results = sorted(cf_results, key=lambda x: -x[0].rating)
 	CodeforcesExcelWriter().write(folder + 'codeforces_results.xlsx', cf_results)
 	with open(folder + 'codeforces_results.md', 'w', encoding='utf-8') as f:
 		f.write(codeforces.writable_md(parsing_time, cf_results))

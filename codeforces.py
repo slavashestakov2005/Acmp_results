@@ -99,7 +99,6 @@ def parse_user_submissions(handle, raw_file):
 		time.sleep(1)
 		data = requests.get(url)
 		rows = data.json()['result']
-		print(len(rows))
 		for sub in rows:
 			prob = sub['problem']
 			id, task, lang, res = sub['id'], (prob['contestId'], prob['index']), sub['programmingLanguage'], sub['verdict']
@@ -112,7 +111,6 @@ def parse_user_submissions(handle, raw_file):
 				good_task.append([task, lang])
 			else:
 				bad_task.append([task, lang])
-		print(len(rows))
 		if len(rows) < task_per_page:
 			break
 		page += 1
