@@ -20,8 +20,11 @@ class ExcelParentWriter:
         return self.__format_url('https://codeforces.com/profile/{}', user_id)
 
     def task_cf_url(self, task_id):
-        parse = re.findall(r'(\d+)\s*(\D+)', task_id)[0]
-        return self.__format_url('https://codeforces.com/contest/{}/problem/{}', *parse)
+        try:
+            parse = re.findall(r'(\d+)\s*(\D+)', task_id)[0]
+            return self.__format_url('https://codeforces.com/contest/{}/problem/{}', *parse)
+        except Exception:
+            return ''
 
     def user_acmp_url(self, user_id):
         return self.__format_url('https://acmp.ru/?main=user&id={}', user_id)

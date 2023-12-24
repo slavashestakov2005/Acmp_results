@@ -39,6 +39,7 @@ def parse_group(folder, url_suffix, users, langs):
 	acmp_results, cf_results, all_results, parsing_time = [], [], [], get_time()
 	for current_user in users:
 		name = current_user['name']
+		print(name)
 		if 'acmp' in current_user:
 			acmp_id = current_user['acmp']
 			acmp_user = acmp.parse_user_profile(acmp_id)

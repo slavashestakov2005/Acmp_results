@@ -94,7 +94,6 @@ def parse_user_profile(userId):
 	userName = html_parser.find_all('td', {'class' : 'menu_title'})[4].text
 	userName = bytes(userName, r.encoding).decode('cp1251').title()
 	userName = ' '.join(userName.split(' ')[0:2])
-	print(userName)
 	return User(userId, userName, rank, rating)
 
 
