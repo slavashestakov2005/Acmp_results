@@ -96,7 +96,7 @@ def parse_user_submissions(handle, raw_file):
 	while True:
 		print('Cf page', page)
 		url = 'https://codeforces.com/api/user.status?handle={}&from={}&count={}'.format(handle, 1 + page * task_per_page, task_per_page)
-		time.sleep(1)
+		time.sleep(2)
 		data = requests.get(url)
 		rows = data.json()['result']
 		for sub in rows:
