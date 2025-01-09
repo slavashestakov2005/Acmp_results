@@ -21,8 +21,9 @@ class ExcelParentWriter:
 
     def task_cf_url(self, task_id):
         try:
-            parse = re.findall(r'(\d+)\s*(\D+)', task_id)[0]
-            return self.__format_url('https://codeforces.com/contest/{}/problem/{}', *parse)
+            parse = re.findall(r'(\d+)\s*(\D+\d*)', task_id)[0]
+            contest_gym = 'gym' if int(parse[0]) > 10 ** 5 else 'contest'
+            return self.__format_url('https://codeforces.com/{}/{}/problem/{}', contest_gym, *parse)
         except Exception:
             return ''
 
