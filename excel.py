@@ -197,12 +197,17 @@ class CodeforcesExcelWriter(ExcelParentWriter):
 
 
 class ExcelWriter(ExcelParentWriter):
-    def __gen_sheet__(self, worksheet, all_res: list, acmp_task: list, cf_task: list):
+    def __gen_sheet__(self, worksheet, all_res: list, acmp_task: list, cf_task: list, info_coll: None | list):
         lang = None
-        head, wr = [('d', '№')], [[('d', 'Acmp')], [('d', 'Codeforces')], [('d', '+')], [('d', '-')]]
         self.head_size = 4
-        wr.extend([('at', i)] for i in acmp_task)
-        wr.extend([('ct', i)] for i in cf_task)
+        if info_coll is None:
+            head, wr = [('d', '№')], [[('d', 'Acmp')], [('d', 'Codeforces')], [('d', '+')], [('d', '-')]]
+            wr.extend([('at', i)] for i in acmp_task)
+            wr.extend([('ct', i)] for i in cf_task)
+        else:
+            head, wr = [('d', 'Описание'), ('d', '№')], [[('d', ''), ('d', 'Acmp')], [('d', ''), ('d', 'Codeforces')], [('d', ''), ('d', '+')], [('d', ''), ('d', '-')]]
+            wr.extend([('d', info), ('at', i)] for info, i in zip(info_coll, acmp_task))
+            wr.extend([('d', info), ('ct', i)] for info, i in zip(info_coll, cf_task))
         for x in all_res:
             name, acmp_id, codeforces_id, ac_tasks, cf_tasks = x
             good, bad = 0, 0
@@ -235,8 +240,8 @@ class ExcelWriter(ExcelParentWriter):
         self.__write__(worksheet, wr)
         return head, wr[0], wr[1], wr[2], wr[3]
 
-    def write(self, filename: str, all_res: list, acmp_tasks: list, cf_tasks: list):
+    def write(self, filename: str, all_res: list, acmp_tasks: list, cf_tasks: list, info_coll: list = None):
         self.__styles__(filename)
-        res = self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), all_res, acmp_tasks, cf_tasks)
+        res = self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), all_res, acmp_tasks, cf_tasks, info_coll)
         self.workbook.close()
         return res

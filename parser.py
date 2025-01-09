@@ -75,13 +75,24 @@ def parse_group(folder, url_suffix, users, langs):
 	with open(folder + 'codeforces_results.md', 'w', encoding='utf-8') as f:
 		f.write(codeforces.writable_md(parsing_time, cf_results))
 
+	all_acmp_tasks, all_cf_tasks = [], []
+	info_acmp, info_cf = [], []
 	for tasks_file in os.listdir(tasks_folder):
 		with open(folder + 'tasks/' + tasks_file, 'r', encoding='utf-8') as f:
 			acmp_tasks, cf_tasks = read_tasks_list(f)
+		all_acmp_tasks.extend(acmp_tasks)
+		all_cf_tasks.extend(cf_tasks)
+		info_acmp.extend(tasks_file.rsplit('.', 1)[0] for task in acmp_tasks)
+		info_cf.extend(tasks_file.rsplit('.', 1)[0] for task in cf_tasks)
 		task_full_name = tasks_results + tasks_file.rsplit('.', 1)[0]
 		data = ExcelWriter().write(task_full_name + '.xlsx', all_results, acmp_tasks, cf_tasks)
 		with open(task_full_name + '.md', 'w', encoding='utf-8') as f:
 			f.write(writable_md_task(parsing_time, data, tasks_file.rsplit('.', 1)[0]))
+	all_tasks_full_name = tasks_results + 'all'
+	info_acmp.extend(info_cf)
+	data = ExcelWriter().write(all_tasks_full_name + '.xlsx', all_results, all_acmp_tasks, all_cf_tasks, info_acmp)
+	with open(all_tasks_full_name + '.md', 'w', encoding='utf-8') as f:
+		f.write(writable_md_task(parsing_time, data, 'all'))
 
 
 def parse_group_file(filename):
