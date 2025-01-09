@@ -1,4 +1,4 @@
 start cmd /k "py parser.py & echo. & pause & exit"
-@REM git add .
-@REM git commit -m "Update"
-@REM git push -u origin main
+git add .
+git commit -m "Update"
+git push -u origin main
