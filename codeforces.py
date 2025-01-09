@@ -93,27 +93,30 @@ def parse_user_submissions(handle, raw_file):
 	first_solve = last_solve
 	task_per_page = 5
 	page = 0
-	while True:
-		print('Cf page', page)
-		url = 'https://codeforces.com/api/user.status?handle={}&from={}&count={}'.format(handle, 1 + page * task_per_page, task_per_page)
-		time.sleep(2)
-		data = requests.get(url)
-		rows = data.json()['result']
-		for sub in rows:
-			prob = sub['problem']
-			id, task, lang, res = sub['id'], (prob['contestId'], prob['index']), sub['programmingLanguage'], sub['verdict']
-			if first_solve == last_solve:
-				first_solve = id
-			if id == last_solve:
-				rows = []
+	try:
+		while True:
+			print('Cf page', page)
+			url = 'https://codeforces.com/api/user.status?handle={}&from={}&count={}'.format(handle, 1 + page * task_per_page, task_per_page)
+			time.sleep(2)
+			data = requests.get(url)
+			rows = data.json()['result']
+			for sub in rows:
+				prob = sub['problem']
+				id, task, lang, res = sub['id'], (prob['contestId'], prob['index']), sub['programmingLanguage'], sub['verdict']
+				if first_solve == last_solve:
+					first_solve = id
+				if id == last_solve:
+					rows = []
+					break
+				if res == 'OK':
+					good_task.append([task, lang])
+				else:
+					bad_task.append([task, lang])
+			if len(rows) < task_per_page:
 				break
-			if res == 'OK':
-				good_task.append([task, lang])
-			else:
-				bad_task.append([task, lang])
-		if len(rows) < task_per_page:
-			break
-		page += 1
+			page += 1
+	except BaseException as ex:
+		print(ex)
 	dump_saved(raw_file, bad_task, good_task, first_solve)
 	return Tasks(bad_task, good_task), len(good_task) + len(bad_task), first_solve
 

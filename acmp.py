@@ -101,27 +101,30 @@ def parse_user_submissions(userId, raw_file):
 	bad_task, good_task, last_solve = load_saved(raw_file)
 	first_solve = last_solve
 	page = 0
-	while True:
-		print('Acmp page', page)
-		url = 'https://acmp.ru/index.asp?main=status&id_mem={0}&id_res=0&id_t=0&page={1}&uid=0'.format(userId, page)
-		r = requests.get(url + str(userId))
-		html_parser = BeautifulSoup(r.text, 'html.parser')
-		rows = html_parser.find_all('table', {'class' : 'main refresh'})[0].findAll('tr')
-		for row in rows:
-			id, tim, user, task, lang, res, test, etime, emem = (_.text for _ in row.findAll('td'))
-			if first_solve == last_solve:
-				first_solve = id
-			if id == last_solve:
-				rows = []
+	try:
+		while True:
+			print('Acmp page', page)
+			url = 'https://acmp.ru/index.asp?main=status&id_mem={0}&id_res=0&id_t=0&page={1}&uid=0'.format(userId, page)
+			r = requests.get(url + str(userId))
+			html_parser = BeautifulSoup(r.text, 'html.parser')
+			rows = html_parser.find_all('table', {'class' : 'main refresh'})[0].findAll('tr')
+			for row in rows:
+				id, tim, user, task, lang, res, test, etime, emem = (_.text for _ in row.findAll('td'))
+				if first_solve == last_solve:
+					first_solve = id
+				if id == last_solve:
+					rows = []
+					break
+				task = int(task)
+				if res == 'Accepted':
+					good_task.append([task, lang])
+				else:
+					bad_task.append([task, lang])
+			if len(rows) < 20:
 				break
-			task = int(task)
-			if res == 'Accepted':
-				good_task.append([task, lang])
-			else:
-				bad_task.append([task, lang])
-		if len(rows) < 20:
-			break
-		page += 1
+			page += 1
+	except BaseException as ex:
+		print(ex)
 	dump_saved(raw_file, bad_task, good_task, first_solve)
 	return Tasks(bad_task, good_task), len(good_task) + len(bad_task), first_solve
 
