@@ -3,3 +3,5 @@
 12. Дачники (acmp.ru)
 236. Многочлен (acmp.ru)
 Задача - 52C - Codeforces
+640. Test-The-Best (acmp.ru)
+249. Скобки (acmp.ru)
