@@ -197,25 +197,32 @@ class CodeforcesExcelWriter(ExcelParentWriter):
 
 
 class ExcelWriter(ExcelParentWriter):
-    def __gen_sheet__(self, worksheet, all_res: list, acmp_task: list, cf_task: list, info_coll: None | list):
+    ACMP_TASK_TAG = 'at'
+    CF_TASK_TAG = 'ct'
+
+    def __gen_sheet__(self, worksheet, all_res: list, tasks: list, types: list, info_coll: None | list):
         lang = None
         self.head_size = 4
         if info_coll is None:
             head, wr = [('d', '№')], [[('d', 'Acmp')], [('d', 'Codeforces')], [('d', '+')], [('d', '-')]]
-            wr.extend([('at', i)] for i in acmp_task)
-            wr.extend([('ct', i)] for i in cf_task)
+            wr.extend([(typ, task)] for task, typ in zip(tasks, types))
         else:
             head, wr = [('d', 'Описание'), ('d', '№')], [[('d', ''), ('d', 'Acmp')], [('d', ''), ('d', 'Codeforces')], [('d', ''), ('d', '+')], [('d', ''), ('d', '-')]]
-            wr.extend([('d', info), ('at', i)] for info, i in zip(info_coll, acmp_task))
-            wr.extend([('d', info), ('ct', i)] for info, i in zip(info_coll, cf_task))
+            wr.extend([('d', info), (typ, task)] for task, typ, info in zip(tasks, types, info_coll))
         for x in all_res:
             name, acmp_id, codeforces_id, ac_tasks, cf_tasks = x
             good, bad = 0, 0
             head.append(('d', name))
             wr[0].append(('au', acmp_id))
             wr[1].append(('cu', codeforces_id))
-            for i in range(len(acmp_task)):
-                task = ac_tasks.get_task(acmp_task[i])
+            line_num = self.head_size
+            for task_id, typ in zip(tasks, types):
+                if typ == ExcelWriter.ACMP_TASK_TAG:
+                    task = ac_tasks.get_task(task_id)
+                elif typ == ExcelWriter.CF_TASK_TAG:
+                    task = cf_tasks.get_task(task_id)
+                else:
+                    raise ValueError("Unexpected task tag")
                 v = 0
                 if task.solved(lang) > 0:
                     v = 1
@@ -223,25 +230,16 @@ class ExcelWriter(ExcelParentWriter):
                 elif task.unsolved(lang) > 0:
                     v = -1
                     bad += 1
-                wr[i + self.head_size].append(('s', [v, task.pm(lang)]))
-            for i in range(len(cf_task)):
-                task = cf_tasks.get_task(cf_task[i])
-                v = 0
-                if task.solved(lang) > 0:
-                    v = 1
-                    good += 1
-                elif task.unsolved(lang) > 0:
-                    v = -1
-                    bad += 1
-                wr[i + len(acmp_task) + self.head_size].append(('s', [v, task.pm(lang)]))
+                wr[line_num].append(('s', [v, task.pm(lang)]))
+                line_num += 1
             wr[2].append(('d', good))
             wr[3].append(('d', bad))
         self.__head__(worksheet, *head)
         self.__write__(worksheet, wr)
         return head, wr[0], wr[1], wr[2], wr[3]
 
-    def write(self, filename: str, all_res: list, acmp_tasks: list, cf_tasks: list, info_coll: list = None):
+    def write(self, filename: str, all_res: list, tasks: list, types: list, info_coll: list = None):
         self.__styles__(filename)
-        res = self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), all_res, acmp_tasks, cf_tasks, info_coll)
+        res = self.__gen_sheet__(self.workbook.add_worksheet('Результаты'), all_res, tasks, types, info_coll)
         self.workbook.close()
         return res

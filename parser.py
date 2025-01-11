@@ -75,22 +75,23 @@ def parse_group(folder, url_suffix, users, langs):
 	with open(folder + 'codeforces_results.md', 'w', encoding='utf-8') as f:
 		f.write(codeforces.writable_md(parsing_time, cf_results))
 
-	all_acmp_tasks, all_cf_tasks = [], []
-	info_acmp, info_cf = [], []
+	all_tasks, all_types, all_info = [], [], []
 	for tasks_file in os.listdir(tasks_folder):
+		tasks_file_name = tasks_file.rsplit('.', 1)[0]
 		with open(folder + 'tasks/' + tasks_file, 'r', encoding='utf-8') as f:
 			acmp_tasks, cf_tasks = read_tasks_list(f)
-		all_acmp_tasks.extend(acmp_tasks)
-		all_cf_tasks.extend(cf_tasks)
-		info_acmp.extend(tasks_file.rsplit('.', 1)[0] for task in acmp_tasks)
-		info_cf.extend(tasks_file.rsplit('.', 1)[0] for task in cf_tasks)
-		task_full_name = tasks_results + tasks_file.rsplit('.', 1)[0]
-		data = ExcelWriter().write(task_full_name + '.xlsx', all_results, acmp_tasks, cf_tasks)
+		cur_tasks = acmp_tasks + cf_tasks
+		cur_types = [ExcelWriter.ACMP_TASK_TAG for _ in acmp_tasks] + [ExcelWriter.CF_TASK_TAG for _ in cf_tasks]
+		cur_info = [tasks_file_name for _ in acmp_tasks] + [tasks_file_name for _ in cf_tasks]
+		all_tasks.extend(cur_tasks)
+		all_types.extend(cur_types)
+		all_info.extend(cur_info)
+		task_full_name = tasks_results + tasks_file_name
+		data = ExcelWriter().write(task_full_name + '.xlsx', all_results, cur_tasks, cur_types)
 		with open(task_full_name + '.md', 'w', encoding='utf-8') as f:
-			f.write(writable_md_task(parsing_time, data, tasks_file.rsplit('.', 1)[0]))
+			f.write(writable_md_task(parsing_time, data, tasks_file_name))
 	all_tasks_full_name = tasks_results + 'all'
-	info_acmp.extend(info_cf)
-	data = ExcelWriter().write(all_tasks_full_name + '.xlsx', all_results, all_acmp_tasks, all_cf_tasks, info_acmp)
+	data = ExcelWriter().write(all_tasks_full_name + '.xlsx', all_results, all_tasks, all_types, all_info)
 	with open(all_tasks_full_name + '.md', 'w', encoding='utf-8') as f:
 		f.write(writable_md_task(parsing_time, data, 'all'))
 
@@ -101,9 +102,15 @@ def parse_group_file(filename):
 	return data['users'], data['langs'], data['url_suffix']
 
 
+def is_need_parse(group: str) -> bool:
+	return group.startswith('24-25')
+
+
 def parse_all():
 	main_path = 'groups'
 	for group in os.listdir(main_path):
+		if not is_need_parse(group):
+			continue
 		path = main_path + '/' + group + '/'
 		users, langs, url_suffix = parse_group_file(path + 'users.json')
 		parse_group(path, url_suffix, users, langs)
