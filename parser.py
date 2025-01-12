@@ -41,26 +41,34 @@ def parse_group(folder, url_suffix, users, langs):
 		name = current_user['name']
 		print(name)
 		if 'acmp' in current_user:
-			acmp_id = current_user['acmp']
-			acmp_user = acmp.parse_user_profile(acmp_id)
-			acmp_user.set_name(name)
-			ac_tasks, acmp_user.send, last_solve = acmp.parse_user_submissions(acmp_id, raw_acmp + str(acmp_id) + '.txt')
-			with open(res_acmp + name + '.txt', 'w', encoding='utf-8') as f:
-				f.write(acmp_user.writable())
-				f.write(ac_tasks.writable(last_solve))
-			acmp_results.append([acmp_user, ac_tasks])
+			try:
+				acmp_id = current_user['acmp']
+				acmp_user = acmp.parse_user_profile(acmp_id)
+				acmp_user.set_name(name)
+				ac_tasks, acmp_user.send, last_solve = acmp.parse_user_submissions(acmp_id, raw_acmp + str(acmp_id) + '.txt')
+				with open(res_acmp + name + '.txt', 'w', encoding='utf-8') as f:
+					f.write(acmp_user.writable())
+					f.write(ac_tasks.writable(last_solve))
+				acmp_results.append([acmp_user, ac_tasks])
+			except BaseException:
+				acmp_id = None
+				ac_tasks = acmp.Tasks([], [])
 		else:
 			acmp_id = None
 			ac_tasks = acmp.Tasks([], [])
 		if 'codeforces' in current_user:
-			codeforces_id = current_user['codeforces']
-			codeforces_user = codeforces.parse_user_profile(codeforces_id)
-			codeforces_user.set_name(name)
-			cf_tasks, codeforces_user.send, last_solve = codeforces.parse_user_submissions(codeforces_id, raw_cf + str(codeforces_id) + '.txt')
-			with open(res_cf + name + '.txt', 'w', encoding='utf-8') as f:
-				f.write(codeforces_user.writable())
-				f.write(cf_tasks.writable(last_solve))
-			cf_results.append([codeforces_user, cf_tasks])
+			try:
+				codeforces_id = current_user['codeforces']
+				codeforces_user = codeforces.parse_user_profile(codeforces_id)
+				codeforces_user.set_name(name)
+				cf_tasks, codeforces_user.send, last_solve = codeforces.parse_user_submissions(codeforces_id, raw_cf + str(codeforces_id) + '.txt')
+				with open(res_cf + name + '.txt', 'w', encoding='utf-8') as f:
+					f.write(codeforces_user.writable())
+					f.write(cf_tasks.writable(last_solve))
+				cf_results.append([codeforces_user, cf_tasks])
+			except BaseException:
+				codeforces_id = None
+				cf_tasks = codeforces.Tasks([], [])
 		else:
 			codeforces_id = None
 			cf_tasks = codeforces.Tasks([], [])
